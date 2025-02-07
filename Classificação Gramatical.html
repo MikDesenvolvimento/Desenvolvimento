@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classificação de Palavras</title>
+    <style>
+        body { background-color: #121212; color: white; font-family: Arial, sans-serif; text-align: center; }
+        .container { max-width: 600px; margin: auto; padding: 20px; border: 1px solid white; border-radius: 10px; }
+        button { margin: 5px; padding: 10px; border: none; cursor: pointer; }
+        .btn { background-color: #007bff; color: white; }
+        .btn:hover { background-color: #0056b3; }
+        .danger { background-color: #dc3545; }
+        .danger:hover { background-color: #a71d2a; }
+        .settings { display: none; background-color: #333; padding: 20px; border-radius: 10px; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .controls { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <p id="word"></p>
+        <div id="buttons"></div>
+        <p id="sessionScore">Acertos da Sessão: 0</p>
+        <p id="overallScore">Acertos Totais: 0</p>
+        <div class="controls">
+            <button class="btn" onclick="copyClassifications()">Copiar</button>
+            <button class="danger" onclick="resetGame()">Resetar</button>
+            <button class="btn" onclick="classifyWord()">Concluído</button>
+            <button class="btn" onclick="toggleSettings()">Configurações</button>
+        </div>
+    </div>
+    
+    <div id="settings" class="settings">
+        <h2>Configurações</h2>
+        <label>Dificuldade:
+            <select id="difficulty" onchange="changeDifficulty()">
+                <option value="fácil">Fácil</option>
+                <option value="médio">Médio</option>
+                <option value="difícil">Difícil</option>
+            </select>
+        </label>
+        <br><br>
+        <label>Adicionar Frase:
+            <input type="text" id="newSentence" placeholder="Digite a frase">
+            <select id="sentenceDifficulty">
+                <option value="fácil">Fácil</option>
+                <option value="médio">Médio</option>
+                <option value="difícil">Difícil</option>
+            </select>
+            <button class="btn" onclick="addSentence()">Adicionar</button>
+        </label>
+        <br><br>
+        <button class="danger" onclick="toggleSettings()">Fechar</button>
+    </div>
+
+    <script>
+        const classesGramaticais = ["Substantivo", "Adjetivo", "Verbo", "Advérbio", "Pronome", "Preposição", "Conjunção", "Interjeição", "Numeral", "Artigo"];
+        let gameData = JSON.parse(localStorage.getItem("classificação_classes_gramaticais")) || {
+            dificuldade: "fácil",
+            sentences: {
+                fácil: [],
+                médio: [],
+                difícil: []
+            },
+            overallScore: 0,
+            sessionScore: 0
+        };
+
+        let difficulty = gameData.dificuldade;
+        let sentences = gameData.sentences[difficulty];
+        let currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
+        let currentWordIndex = 0;
+        let classifications = [];
+
+        // Exibir os contadores
+        document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`;
+        document.getElementById("overallScore").innerText = `Acertos Totais: ${gameData.overallScore}`;
+
+        document.getElementById("difficulty").value = difficulty;
+        updateWord();
+
+        function updateWord() {
+            document.getElementById("word").innerText = currentSentence.split(" ")[currentWordIndex] || "";
+            let buttons = document.getElementById("buttons");
+            buttons.innerHTML = "";
+            classesGramaticais.forEach(classe => {
+                let btn = document.createElement("button");
+                btn.innerText = classe;
+                btn.classList.add("btn");
+                btn.onclick = () => selectClassification(classe);
+                buttons.appendChild(btn);
+            });
+        }
+
+        function selectClassification(classe) {
+            let word = currentSentence.split(" ")[currentWordIndex];
+            classifications[currentWordIndex] = `${word} = ${classe}`;
+            if (currentWordIndex < currentSentence.split(" ").length - 1) {
+                currentWordIndex++;
+                updateWord();
+            }
+        }
+
+        function classifyWord() {
+            if (currentWordIndex >= currentSentence.split(" ").length - 1) {
+                // Aqui, você pode adicionar a lógica para verificar se a classificação está correta
+                let correct = true; // Substitua por sua lógica de verificação de acertos
+
+                if (correct) {
+                    gameData.sessionScore++; // Incrementa o contador da sessão
+                    gameData.overallScore++; // Incrementa o contador de acertos totais
+                }
+
+                // Atualiza a exibição dos contadores
+                document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`;
+                document.getElementById("overallScore").innerText = `Acertos Totais: ${gameData.overallScore}`;
+
+                sentences = sentences.filter(s => s !== currentSentence);
+                gameData.sentences[difficulty] = sentences;
+                gameData.sessionScore = 0; // Reseta o contador da sessão
+                currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
+                currentWordIndex = 0;
+                classifications = [];
+                updateWord();
+                saveGameData();
+            }
+        }
+
+        function resetGame() {
+            currentWordIndex = 0; // Reinicia o índice da palavra
+            classifications = []; // Reseta as classificações para a sessão
+            gameData.sessionScore = 0; // Reseta o contador da sessão
+            updateWord(); // Atualiza a palavra exibida
+            document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`; // Mantém o contador de acertos da sessão
+            saveGameData();
+        }
+
+        function copyClassifications() {
+            let textToCopy = `Frase: ${currentSentence}\n\n${classifications.join("\n")}\n\nVeja se minha classificação está correta.`;
+            navigator.clipboard.writeText(textToCopy).then(() => alert("Classificações copiadas!"));
+        }
+
+        function changeDifficulty() {
+            difficulty = document.getElementById("difficulty").value;
+            gameData.dificuldade = difficulty;
+            sentences = gameData.sentences[difficulty];
+            currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
+            currentWordIndex = 0;
+            classifications = [];
+            updateWord();
+            saveGameData();
+        }
+
+        function toggleSettings() {
+            let settingsDiv = document.getElementById("settings");
+            settingsDiv.style.display = settingsDiv.style.display === "none" || settingsDiv.style.display === "" ? "block" : "none";
+        }
+
+        function addSentence() {
+            let newSentence = document.getElementById("newSentence").value;
+            let level = document.getElementById("sentenceDifficulty").value;
+            if (newSentence.trim()) {
+                gameData.sentences[level].push(newSentence);
+                document.getElementById("newSentence").value = "";
+                saveGameData();
+            }
+        }
+
+        function saveGameData() {
+            localStorage.setItem("classificação_classes_gramaticais", JSON.stringify(gameData));
+        }
+
+    function addConfigurableButtons(leftButtonConfig, rightButtonConfig) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.position = 'fixed';
+        buttonContainer.style.top = '0';
+        buttonContainer.style.width = '100%';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.padding = '5px 10px';
+        buttonContainer.style.boxSizing = 'border-box';
+        buttonContainer.style.zIndex = '1000';
+        buttonContainer.style.borderBottom = '1px solid #ccc';
+
+        // Adiciona padding ao body para evitar sobreposição
+        document.body.style.paddingTop = '50px';
+
+        function createButton(config) {
+            const button = document.createElement('button');
+            button.textContent = config.name;
+            button.style.backgroundColor = '#007bff';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.padding = '6px 12px';
+            button.style.fontSize = '14px';
+            button.style.cursor = 'pointer';
+            button.style.borderRadius = '5px';
+            button.style.textDecoration = 'none';
+            button.style.transition = 'background-color 0.3s ease, transform 0.3s ease';
+            button.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+
+            button.onmouseover = () => {
+                button.style.backgroundColor = '#0056b3';
+                button.style.transform = 'scale(1.05)';
+            };
+            button.onmouseout = () => {
+                button.style.backgroundColor = '#007bff';
+                button.style.transform = 'scale(1)';
+            };
+
+            button.onclick = async () => {
+                if (config.url === "recarregar") {
+                    window.location.reload();
+                    return;
+                }
+
+                try {
+                    const response = await fetch(config.url);
+                    if (!response.ok) throw new Error('Erro ao carregar o conteúdo');
+                    const content = await response.text();
+                    document.documentElement.innerHTML = '';
+                    document.open();
+                    document.write(content);
+                    document.close();
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            return button;
+        }
+
+        buttonContainer.appendChild(createButton(leftButtonConfig));
+        buttonContainer.appendChild(createButton(rightButtonConfig));
+        document.body.prepend(buttonContainer);
+    }
+
+    addConfigurableButtons(
+        { name: 'Recarregar', url: 'recarregar' },
+        { name: 'Continuar', url: 'file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/C%C3%A1lculo%20Mental.html' }
+    );
+
+    </script>
+</body>
+</html>

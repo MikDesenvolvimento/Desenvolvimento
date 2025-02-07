@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sites Escola</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #4caf50;
+            border-radius: 5px;
+            background-color: #1e1e1e;
+            color: #ffffff;
+            font-size: 1rem;
+        }
+        .buttons-container {
+            max-height: 300px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scrollbar-width: thin;
+            scrollbar-color: #4caf50 #1e1e1e;
+        }
+        .buttons-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .buttons-container::-webkit-scrollbar-track {
+            background: #1e1e1e;
+        }
+        .buttons-container::-webkit-scrollbar-thumb {
+            background: #4caf50;
+            border-radius: 4px;
+        }
+        .buttons-container::-webkit-scrollbar-thumb:hover {
+            background: #6fbf73;
+        }
+        button {
+            background-color: #1e1e1e;
+            border: 2px solid #4caf50;
+            color: #ffffff;
+            padding: 15px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background-color: #4caf50;
+            color: #121212;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <input type="text" id="searchInput" placeholder="Pesquisar botões..." oninput="filterButtons()">
+        <div class="buttons-container" id="buttonContainer">
+        </div>
+    </div>
+    <script>
+        // Dados dos botões (Texto / Link)
+        const buttonsData = [
+            { text: "Notas Redações", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/Notas%20Reda%C3%A7%C3%B5es.html" },
+            { text: "Classes Gramaticais", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/Classifica%C3%A7%C3%A3o%20Gramatical.html" },
+            { text: "Cálculo Mental", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/C%C3%A1lculo%20Mental.html" }
+        ];
+
+        const buttonContainer = document.getElementById("buttonContainer");
+
+        // Função para criar os botões dinamicamente
+        buttonsData.forEach(buttonInfo => {
+            const button = document.createElement("button");
+            button.textContent = buttonInfo.text;
+
+            // Adiciona evento ao botão para fazer o fetch
+            button.onclick = async () => {
+                try {
+                    const response = await fetch(buttonInfo.url);
+                    if (!response.ok) {
+                        throw new Error(`Erro ao carregar o conteúdo (${response.status})`);
+                    }
+                    const html = await response.text();
+                    document.open();
+                    document.write(html); // Substitui o conteúdo atual pelo novo HTML
+                    document.close();
+                } catch (error) {
+                    alert(`Erro ao carregar o conteúdo: ${error.message}`);
+                }
+            };
+
+            buttonContainer.appendChild(button);
+        });
+
+        // Função para filtrar os botões com base na pesquisa
+        function filterButtons() {
+            const searchValue = document.getElementById("searchInput").value.toLowerCase();
+            const buttons = buttonContainer.querySelectorAll("button");
+
+            buttons.forEach(button => {
+                const buttonText = button.textContent.toLowerCase();
+                if (buttonText.includes(searchValue)) {
+                    button.classList.remove("hidden");
+                } else {
+                    button.classList.add("hidden");
+                }
+            });
+        }
+
+    function addConfigurableButtons(leftButtonConfig, rightButtonConfig) {
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.position = 'fixed';
+        buttonContainer.style.top = '0';
+        buttonContainer.style.width = '100%';
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.justifyContent = 'space-between';
+        buttonContainer.style.padding = '5px 10px';
+        buttonContainer.style.boxSizing = 'border-box';
+        buttonContainer.style.zIndex = '1000';
+        buttonContainer.style.borderBottom = '1px solid #ccc';
+
+        // Adiciona padding ao body para evitar sobreposição
+        document.body.style.paddingTop = '50px';
+
+        function createButton(config) {
+            const button = document.createElement('button');
+            button.textContent = config.name;
+            button.style.backgroundColor = '#007bff';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.padding = '6px 12px';
+            button.style.fontSize = '14px';
+            button.style.cursor = 'pointer';
+            button.style.borderRadius = '5px';
+            button.style.textDecoration = 'none';
+            button.style.transition = 'background-color 0.3s ease, transform 0.3s ease';
+            button.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.1)';
+
+            button.onmouseover = () => {
+                button.style.backgroundColor = '#0056b3';
+                button.style.transform = 'scale(1.05)';
+            };
+            button.onmouseout = () => {
+                button.style.backgroundColor = '#007bff';
+                button.style.transform = 'scale(1)';
+            };
+
+            button.onclick = async () => {
+                if (config.url === "recarregar") {
+                    window.location.reload();
+                    return;
+                }
+
+                if (config.url.startsWith("redirecionar,")) {
+                    const redirectUrl = config.url.split(",")[1].trim();
+                    window.location.href = redirectUrl;
+                    return;
+                }
+
+                try {
+                    const response = await fetch(config.url);
+                    if (!response.ok) throw new Error('Erro ao carregar o conteúdo');
+                    const content = await response.text();
+                    document.documentElement.innerHTML = '';
+                    document.open();
+                    document.write(content);
+                    document.close();
+                } catch (error) {
+                    console.error(error);
+                }
+            };
+
+            return button;
+        }
+
+        buttonContainer.appendChild(createButton(leftButtonConfig));
+        buttonContainer.appendChild(createButton(rightButtonConfig));
+        document.body.prepend(buttonContainer);
+    }
+
+    addConfigurableButtons(
+        { name: 'Sem internet', url: 'file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/Classifica%C3%A7%C3%A3o%20Gramatical.html' },
+        { name: 'Com internet', url: 'redirecionar, https://chatgpt.com/c/6796376f-441c-800c-9a71-2390b279266d?=fazerredacao' }
+    );
+
+    </script>
+</body>
+</html>
