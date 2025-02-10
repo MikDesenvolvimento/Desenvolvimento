@@ -73,59 +73,7 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <input type="text" id="searchInput" placeholder="Pesquisar botões..." oninput="filterButtons()">
-        <div class="buttons-container" id="buttonContainer">
-        </div>
-    </div>
     <script>
-        // Dados dos botões (Texto / Link)
-        const buttonsData = [
-            { text: "Notas Redações", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/Notas%20Reda%C3%A7%C3%B5es.html" },
-            { text: "Classes Gramaticais", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/Classifica%C3%A7%C3%A3o%20Gramatical.html" },
-            { text: "Cálculo Mental", url: "file:///C:/Users/luci/Desktop/Desenvolvimento/Sites/Escola/C%C3%A1lculo%20Mental.html" }
-        ];
-
-        const buttonContainer = document.getElementById("buttonContainer");
-
-        // Função para criar os botões dinamicamente
-        buttonsData.forEach(buttonInfo => {
-            const button = document.createElement("button");
-            button.textContent = buttonInfo.text;
-
-            // Adiciona evento ao botão para fazer o fetch
-            button.onclick = async () => {
-                try {
-                    const response = await fetch(buttonInfo.url);
-                    if (!response.ok) {
-                        throw new Error(`Erro ao carregar o conteúdo (${response.status})`);
-                    }
-                    const html = await response.text();
-                    document.open();
-                    document.write(html); // Substitui o conteúdo atual pelo novo HTML
-                    document.close();
-                } catch (error) {
-                    alert(`Erro ao carregar o conteúdo: ${error.message}`);
-                }
-            };
-
-            buttonContainer.appendChild(button);
-        });
-
-        // Função para filtrar os botões com base na pesquisa
-        function filterButtons() {
-            const searchValue = document.getElementById("searchInput").value.toLowerCase();
-            const buttons = buttonContainer.querySelectorAll("button");
-
-            buttons.forEach(button => {
-                const buttonText = button.textContent.toLowerCase();
-                if (buttonText.includes(searchValue)) {
-                    button.classList.remove("hidden");
-                } else {
-                    button.classList.add("hidden");
-                }
-            });
-        }
 
     function addConfigurableButtons(leftButtonConfig, rightButtonConfig) {
         const buttonContainer = document.createElement('div');
