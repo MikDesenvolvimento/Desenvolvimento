@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>48 Leis do Poder</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #ffffff;
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: #1e1e1e;
+      border-radius: 15px;
+      padding: 20px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+      overflow: hidden;
+    }
+
+    .law-title {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #ffcc00; /* Amarelo para destacar o título */
+      margin-bottom: 10px;
+    }
+
+    .law-description {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #d3d3d3; /* Cinza claro para a descrição */
+      margin-bottom: 20px;
+    }
+
+    .search-bar {
+      margin-bottom: 15px;
+    }
+
+    .search-bar input {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      background: #333;
+      color: #fff;
+      font-size: 1rem;
+      outline: none;
+      transition: background 0.3s;
+    }
+
+    .search-bar input:focus {
+      background: #444;
+    }
+
+    .buttons-container {
+      max-height: 200px;
+      overflow-y: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    .buttons-container::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .buttons-container::-webkit-scrollbar-thumb {
+      background: #555;
+      border-radius: 10px;
+    }
+
+    .buttons-container::-webkit-scrollbar-track {
+      background: #222;
+    }
+
+    .button {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.3s, transform 0.3s;
+    }
+
+    .button:hover {
+      background: #555;
+      transform: scale(1.1);
+    }
+
+    .score {
+      margin-top: 20px;
+      font-size: 1.2rem;
+      text-align: center;
+      color: #ffcc00; /* Amarelo para destacar os pontos */
+    }
+
+    .feedback {
+      margin-top: 10px;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="law-title" id="law-title"></div>
+    <div class="law-description" id="law-description"></div>
+    <div class="search-bar">
+      <input type="text" id="search-input" placeholder="Pesquisar número..." oninput="filterButtons()">
+    </div>
+    <div class="buttons-container" id="buttons-container"></div>
+    <div class="score">
+      Acertos desta sessão: <span id="session-score">0</span><br>
+      Acertos totais: <span id="total-score">0</span>
+    </div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <script>
+const laws = [
+  {
+    number: 1,
+    title: "Nunca esbanje o que você tem de bom.",
+    description: "Esconder suas intenções e habilidades cria mistério e evita que os outros se antecipem a você."
+  },
+  {
+    number: 2,
+    title: "Jamais confie demais nos amigos, aprenda a usar seus inimigos.",
+    description: "Amigos podem traí-lo; inimigos, ao serem conquistados, tornam-se aliados mais leais."
+  },
+  {
+    number: 3,
+    title: "Oculta suas intenções.",
+    description: "Mantenha seus planos e objetivos em segredo para evitar interferências."
+  },
+  {
+    number: 4,
+    title: "Sempre diga menos do que o necessário.",
+    description: "Falar pouco aumenta seu ar de mistério e autoridade."
+  },
+  {
+    number: 5,
+    title: "Assuma o crédito de tudo que puder.",
+    description: "Faça com que suas contribuições sejam sempre reconhecidas."
+  },
+  {
+    number: 6,
+    title: "Aprenda a criar uma aura de mistério.",
+    description: "A incerteza sobre suas intenções mantém os outros sob controle."
+  },
+  {
+    number: 7,
+    title: "Faça os outros trabalharem para você, mas leve o crédito.",
+    description: "Delegue tarefas, mas mantenha a glória para si."
+  },
+  {
+    number: 8,
+    title: "Faça os outros virem até você – use iscas, se necessário.",
+    description: "Controle o fluxo das interações, forçando os outros a agir conforme sua vontade."
+  },
+  {
+    number: 9,
+    title: "Vencer pela ação, não pela discussão.",
+    description: "Argumentos prolongados enfraquecem sua posição; aja com determinação."
+  },
+  {
+    number: 10,
+    title: "Evite o excesso de intimidade.",
+    description: "Manter distância cria respeito e admiração."
+  },
+  {
+    number: 11,
+    title: "Não fique na defensiva quando atacado.",
+    description: "Reagir a ataques pessoais apenas revela fraqueza; ignore-os ou redirecione-os."
+  },
+  {
+    number: 12,
+    title: "Use a rendição como arma.",
+    description: "Ceder temporariamente pode desarmar seus inimigos e dar-lhe tempo para contra-atacar."
+  },
+  {
+    number: 13,
+    title: "Torne-se indispensável.",
+    description: "Seja insubstituível para garantir sua posição de poder."
+  },
+  {
+    number: 14,
+    title: "Pose como um amigo, trabalhe como um espião.",
+    description: "Coletar informações discretamente lhe dá vantagem estratégica."
+  },
+  {
+    number: 15,
+    title: "Destrua completamente.",
+    description: "Deixe seus inimigos sem recursos para se reerguerem."
+  },
+  {
+    number: 16,
+    title: "Use a ausência para aumentar o respeito e a devoção.",
+    description: "Sua presença constante pode gerar indiferença; a ausência estratégica aumenta o valor."
+  },
+  {
+    number: 17,
+    title: "Mantenha os outros ocupados.",
+    description: "Distraia seus rivais para que eles não percebam suas verdadeiras intenções."
+  },
+  {
+    number: 18,
+    title: "Não construa fortalezas para se proteger.",
+    description: "Isolar-se cria vulnerabilidades; permaneça acessível e flexível."
+  },
+  {
+    number: 19,
+    title: "Conheça quem está por trás do trono.",
+    description: "Identifique quem realmente detém o poder e influencie essa pessoa."
+  },
+  {
+    number: 20,
+    title: "Não faça compromissos desnecessários.",
+    description: "Compromissos limitam suas opções; mantenha sua liberdade de ação."
+  },
+  {
+    number: 21,
+    title: "Jogue com as fantasias das pessoas.",
+    description: "Ofereça o que elas desejam, mesmo que seja ilusório."
+  },
+  {
+    number: 22,
+    title: "Concentre-se em quem realmente importa.",
+    description: "Ignore os irrelevantes e concentre seus esforços nos influentes."
+  },
+  {
+    number: 23,
+    title: "Refaça sua imagem.",
+    description: "Reinvente-se para manter sua relevância e atrair novos aliados."
+  },
+  {
+    number: 24,
+    title: "Seja visto como santo.",
+    description: "Projetar uma imagem de pureza e bondade encobre suas verdadeiras intenções."
+  },
+  {
+    number: 25,
+    title: "Crie uma sensação de urgência.",
+    description: "Forçar decisões rápidas impede que os outros analisem suas ações criticamente."
+  },
+  {
+    number: 26,
+    title: "Jogue com as fraquezas dos outros.",
+    description: "Explorar vulnerabilidades garante vantagens estratégicas."
+  },
+  {
+    number: 27,
+    title: "Jogue com a necessidade das pessoas de acreditar.",
+    description: "Ofereça algo em que elas possam acreditar para ganhar sua lealdade."
+  },
+  {
+    number: 28,
+    title: "Entre na corrente da história.",
+    description: "Alinhe-se a tendências maiores para amplificar seu poder."
+  },
+  {
+    number: 29,
+    title: "Planeje até o fim.",
+    description: "Antecipe todos os cenários possíveis para evitar surpresas."
+  },
+  {
+    number: 30,
+    title: "Faça as pessoas dependerem de você.",
+    description: "Tornar-se essencial garante sua posição de poder."
+  },
+  {
+    number: 31,
+    title: "Controle as opções.",
+    description: "Dê às pessoas escolhas limitadas que favoreçam seus interesses."
+  },
+  {
+    number: 32,
+    title: "Jogue com as superstições das pessoas.",
+    description: "Use crenças e medos para manipular comportamentos."
+  },
+  {
+    number: 33,
+    title: "Descubra o ponto fraco de cada um.",
+    description: "Encontre a vulnerabilidade de seus oponentes e explore-a."
+  },
+  {
+    number: 34,
+    title: "Seja realista.",
+    description: "Evite fantasias e sonhos impossíveis; foque no que é alcançável."
+  },
+  {
+    number: 35,
+    title: "Domine a arte do timing.",
+    description: "Aguarde o momento certo para agir e maximizar seus resultados."
+  },
+  {
+    number: 36,
+    title: "Despreze o que você não pode ter.",
+    description: "Ignorar algo fora de alcance diminui seu valor aos olhos dos outros."
+  },
+  {
+    number: 37,
+    title: "Crie uma onda de sucesso.",
+    description: "Surfe nas vitórias para aumentar sua reputação e influência."
+  },
+  {
+    number: 38,
+    title: "Pense como uma multidão.",
+    description: "Entenda o comportamento coletivo para prever e moldar eventos."
+  },
+  {
+    number: 39,
+    title: "Agite as águas para atrair peixes.",
+    description: "Crie caos controlado para atrair oportunidades."
+  },
+  {
+    number: 40,
+    title: "Despreze gratuitamente.",
+    description: "Dar algo sem custo reduz seu valor; cobrar cria desejo."
+  },
+  {
+    number: 41,
+    title: "Evite subir muito alto com quem está caindo.",
+    description: "Associe-se a quem está em ascensão, não em declínio."
+  },
+  {
+    number: 42,
+    title: "Ataque o pastor e as ovelhas se dispersarão.",
+    description: "Neutralize o líder para desorganizar o grupo."
+  },
+  {
+    number: 43,
+    title: "Trabalhe nos sentimentos das pessoas.",
+    description: "Manipule emoções para influenciar comportamentos."
+  },
+  {
+    number: 44,
+    title: "Desarme com generosidade.",
+    description: "Surpreender com bondade pode neutralizar inimigos."
+  },
+  {
+    number: 45,
+    title: "Pretextos para justificar suas ações.",
+    description: "Use razões plausíveis para mascarar suas verdadeiras intenções."
+  },
+  {
+    number: 46,
+    title: "Nunca pareça perfeito demais.",
+    description: "Perfeição gera inveja; exponha pequenas falhas para desarmar críticas."
+  },
+  {
+    number: 47,
+    title: "Não ultrapasse o alvo.",
+    description: "Satisfaça seu objetivo e pare antes de exagerar."
+  },
+  {
+    number: 48,
+    title: "Seja ambíguo, não direto.",
+    description: "A ambiguidade mantém os outros na defensiva e impede que eles vejam através de você."
+  }
+];
+
+    let currentLawIndex = Math.floor(Math.random() * laws.length);
+    let sessionScore = 0;
+    let totalScore = parseInt(localStorage.getItem("totalScore")) || 0;
+
+    const lawTitleElement = document.getElementById("law-title");
+    const lawDescriptionElement = document.getElementById("law-description");
+    const buttonsContainer = document.getElementById("buttons-container");
+    const sessionScoreElement = document.getElementById("session-score");
+    const totalScoreElement = document.getElementById("total-score");
+    const feedbackElement = document.getElementById("feedback");
+
+    function loadLaw() {
+      const currentLaw = laws[currentLawIndex];
+      lawTitleElement.textContent = currentLaw.title; // Apenas o título, sem o número
+      lawDescriptionElement.textContent = currentLaw.description;
+      feedbackElement.textContent = "";
+    }
+
+    function loadButtons() {
+      buttonsContainer.innerHTML = "";
+      laws.forEach(law => {
+        const button = document.createElement("button");
+        button.className = "button";
+        button.textContent = law.number;
+        button.onclick = () => checkAnswer(law.number);
+        buttonsContainer.appendChild(button);
+      });
+    }
+
+    function checkAnswer(selectedNumber) {
+      const correctNumber = laws[currentLawIndex].number;
+      if (selectedNumber === correctNumber) {
+        feedbackElement.textContent = "Correto!";
+        feedbackElement.style.color = "#4caf50"; // Verde para acerto
+        sessionScore++;
+        totalScore++;
+        updateScores();
+        currentLawIndex = Math.floor(Math.random() * laws.length);
+        loadLaw();
+      } else {
+        feedbackElement.textContent = "Errado! Tente novamente.";
+        feedbackElement.style.color = "#ff4d4d"; // Vermelho para erro
+      }
+    }
+
+    function updateScores() {
+      sessionScoreElement.textContent = sessionScore;
+      totalScoreElement.textContent = totalScore;
+      localStorage.setItem("totalScore", totalScore);
+    }
+
+    function filterButtons() {
+      const query = document.getElementById("search-input").value.toLowerCase();
+      const buttons = buttonsContainer.querySelectorAll(".button");
+      buttons.forEach(button => {
+        const number = button.textContent.toLowerCase();
+        if (number.includes(query)) {
+          button.style.display = "inline-block";
+        } else {
+          button.style.display = "none";
+        }
+      });
+    }
+
+    loadLaw();
+    loadButtons();
+  </script>
+</body>
+</html>
