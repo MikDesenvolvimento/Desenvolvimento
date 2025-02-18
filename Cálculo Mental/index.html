@@ -110,6 +110,8 @@
                     document.getElementById("time").textContent = --timeLeft;
                 } else {
                     clearInterval(timer); // Para o temporizador
+                    score = 0; // Zera a pontuação quando o tempo acaba
+                    document.getElementById("score").textContent = score;
                     generateQuestion(); // Gera uma nova pergunta
                     startTimer(); // Reinicia o temporizador
                 }
