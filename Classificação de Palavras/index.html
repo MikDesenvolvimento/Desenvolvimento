@@ -120,7 +120,7 @@
         }
 
         function copyClassifications() {
-            let textToCopy = `Frase: ${currentSentence}\n\n${classifications.join("\n")}\n\nVeja se minha classificação está correta.`;
+            let textToCopy = `Frase: ${currentSentence}\n\n${classifications.join("\n")}\n\nVeja se minha classificação está correta, se tiver alguma palavra com mais de uma clase gramatical e eu tiver colocado uma das corretas, considere como correto.`;
             navigator.clipboard.writeText(textToCopy).then(() => alert("Classificações copiadas!"));
         }
 
