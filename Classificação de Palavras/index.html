@@ -21,7 +21,6 @@
         <p id="word"></p>
         <div id="buttons"></div>
         <p id="sessionScore">Acertos da Sessão: 0</p>
-        <p id="overallScore">Acertos Totais: 0</p>
         <div class="controls">
             <button class="btn" onclick="copyClassifications()">Copiar</button>
             <button class="danger" onclick="resetGame()">Resetar</button>
@@ -52,32 +51,25 @@
         <br><br>
         <button class="danger" onclick="toggleSettings()">Fechar</button>
     </div>
-
     <script>
         const classesGramaticais = ["Substantivo", "Adjetivo", "Verbo", "Advérbio", "Pronome", "Preposição", "Conjunção", "Interjeição", "Numeral", "Artigo"];
-        let gameData = JSON.parse(localStorage.getItem("classificação_classes_gramaticais")) || {
-            dificuldade: "fácil",
-            sentences: {
-                fácil: [],
-                médio: [],
-                difícil: []
-            },
-            overallScore: 0,
-            sessionScore: 0
-        };
-
-        let difficulty = gameData.dificuldade;
-        let sentences = gameData.sentences[difficulty];
-        let currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
+        let difficulty = "fácil";
+        let sentences = [];
+        let currentSentence = "";
         let currentWordIndex = 0;
         let classifications = [];
+        let sessionScore = 0;
 
-        // Exibir os contadores
-        document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`;
-        document.getElementById("overallScore").innerText = `Acertos Totais: ${gameData.overallScore}`;
+        // Carregar dados iniciais
+        loadGameData();
 
-        document.getElementById("difficulty").value = difficulty;
-        updateWord();
+        function loadGameData() {
+            // Carrega os dados do localStorage específico para a dificuldade selecionada
+            const storedData = JSON.parse(localStorage.getItem(`classificação_${difficulty}`)) || { sentences: [] };
+            sentences = storedData.sentences;
+            currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
+            updateWord();
+        }
 
         function updateWord() {
             document.getElementById("word").innerText = currentSentence.split(" ")[currentWordIndex] || "";
@@ -103,52 +95,38 @@
 
         function classifyWord() {
             if (currentWordIndex >= currentSentence.split(" ").length - 1) {
-                // Aqui, você pode adicionar a lógica para verificar se a classificação está correta
-                let correct = true; // Substitua por sua lógica de verificação de acertos
+                // Simulação de acerto
+                sessionScore++;
+                document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${sessionScore}`;
 
-                if (correct) {
-                    gameData.sessionScore++; // Incrementa o contador da sessão
-                    gameData.overallScore++; // Incrementa o contador de acertos totais
-                }
-
-                // Atualiza a exibição dos contadores
-                document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`;
-                document.getElementById("overallScore").innerText = `Acertos Totais: ${gameData.overallScore}`;
-
+                // Remove a frase atual e atualiza o localStorage
                 sentences = sentences.filter(s => s !== currentSentence);
-                gameData.sentences[difficulty] = sentences;
-                gameData.sessionScore = 0; // Reseta o contador da sessão
+                saveGameData();
+
+                // Reinicia para uma nova frase
                 currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
                 currentWordIndex = 0;
                 classifications = [];
                 updateWord();
-                saveGameData();
             }
         }
 
         function resetGame() {
-            currentWordIndex = 0; // Reinicia o índice da palavra
-            classifications = []; // Reseta as classificações para a sessão
-            gameData.sessionScore = 0; // Reseta o contador da sessão
-            updateWord(); // Atualiza a palavra exibida
-            document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${gameData.sessionScore}`; // Mantém o contador de acertos da sessão
-            saveGameData();
+            currentWordIndex = 0;
+            classifications = [];
+            sessionScore = 0;
+            document.getElementById("sessionScore").innerText = `Acertos da Sessão: ${sessionScore}`;
+            loadGameData();
         }
 
         function copyClassifications() {
-            let textToCopy = `Frase: ${currentSentence}\n\n${classifications.join("\n")}\n\nVeja se minha classificação está correta.\n\nCaso uma palavra tenha duas classes gramaticais e eu tenha colocado só uma das corretas, considere correto.`;
+            let textToCopy = `Frase: ${currentSentence}\n\n${classifications.join("\n")}\n\nVeja se minha classificação está correta.`;
             navigator.clipboard.writeText(textToCopy).then(() => alert("Classificações copiadas!"));
         }
 
         function changeDifficulty() {
             difficulty = document.getElementById("difficulty").value;
-            gameData.dificuldade = difficulty;
-            sentences = gameData.sentences[difficulty];
-            currentSentence = sentences.length ? sentences[Math.floor(Math.random() * sentences.length)] : "";
-            currentWordIndex = 0;
-            classifications = [];
-            updateWord();
-            saveGameData();
+            loadGameData();
         }
 
         function toggleSettings() {
@@ -157,19 +135,23 @@
         }
 
         function addSentence() {
-            let newSentence = document.getElementById("newSentence").value;
+            let newSentence = document.getElementById("newSentence").value.trim();
             let level = document.getElementById("sentenceDifficulty").value;
-            if (newSentence.trim()) {
-                gameData.sentences[level].push(newSentence);
+            if (newSentence) {
+                const storedData = JSON.parse(localStorage.getItem(`classificação_${level}`)) || { sentences: [] };
+                storedData.sentences.push(newSentence);
+                localStorage.setItem(`classificação_${level}`, JSON.stringify(storedData));
                 document.getElementById("newSentence").value = "";
-                saveGameData();
+                if (level === difficulty) {
+                    loadGameData();
+                }
             }
         }
 
         function saveGameData() {
-            localStorage.setItem("classificação_classes_gramaticais", JSON.stringify(gameData));
+            // Salva os dados no localStorage específico para a dificuldade atual
+            localStorage.setItem(`classificação_${difficulty}`, JSON.stringify({ sentences }));
         }
-
     </script>
 </body>
 </html>
