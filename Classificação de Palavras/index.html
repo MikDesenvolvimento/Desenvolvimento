@@ -152,6 +152,58 @@
             // Salva os dados no localStorage específico para a dificuldade atual
             localStorage.setItem(`classificação_${difficulty}`, JSON.stringify({ sentences }));
         }
+
+        (function() {
+  const panel = document.createElement('div');
+  panel.style.position = 'fixed';
+  panel.style.top = '50%';
+  panel.style.right = '-300px';
+  panel.style.width = '300px';
+  panel.style.height = 'auto';
+  panel.style.maxHeight = '80%';
+  panel.style.backgroundColor = '#333';
+  panel.style.zIndex = '9999';
+  panel.style.transition = 'right 0.3s ease-in-out';
+  panel.style.transform = 'translateY(-50%)';
+  panel.style.overflowY = 'auto';
+  panel.style.padding = '20px';
+  panel.style.boxSizing = 'border-box';
+  panel.style.color = '#fff';
+  panel.style.borderRadius = '10px 0 0 10px';
+
+  const content = document.createElement('div');
+  content.textContent = 'Fácil: 5 Médio: 5 Difícil: 5';
+  content.style.fontSize = '16px';
+  panel.appendChild(content);
+
+  const arrow = document.createElement('div');
+  arrow.innerHTML = '&#8592;';
+  arrow.style.position = 'fixed';
+  arrow.style.top = '50%';
+  arrow.style.right = '10px';
+  arrow.style.transform = 'translateY(-50%)';
+  arrow.style.color = '#fff';
+  arrow.style.fontSize = '24px';
+  arrow.style.cursor = 'pointer';
+  arrow.style.transition = 'right 0.3s ease-in-out, text-shadow 0.3s ease-in-out';
+  arrow.style.textShadow = '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff'; // Efeito neon azul-ciano
+
+  let expanded = false;
+  arrow.onclick = () => {
+    if (expanded) {
+      panel.style.right = '-300px';
+      arrow.style.right = '10px';
+    } else {
+      panel.style.right = '0';
+      arrow.style.right = '310px';
+    }
+    expanded = !expanded;
+  };
+
+  document.body.appendChild(panel);
+  document.body.appendChild(arrow);
+})();
+        
     </script>
 </body>
 </html>
