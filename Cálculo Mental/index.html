@@ -204,7 +204,7 @@
   panel.style.width = '300px';
   panel.style.height = 'auto';
   panel.style.maxHeight = '80%';
-  panel.style.backgroundColor = '#333'; // Fundo escuro para melhor contraste
+  panel.style.backgroundColor = '#333';
   panel.style.zIndex = '9999';
   panel.style.transition = 'right 0.3s ease-in-out';
   panel.style.transform = 'translateY(-50%)';
@@ -229,8 +229,7 @@
   arrow.style.fontSize = '24px';
   arrow.style.cursor = 'pointer';
   arrow.style.transition = 'right 0.3s ease-in-out, text-shadow 0.3s ease-in-out';
-  arrow.style.textShadow = '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff'; // Efeito neon azul-ciano
-
+  arrow.style.textShadow = '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff';
   let expanded = false;
   arrow.onclick = () => {
     if (expanded) {
