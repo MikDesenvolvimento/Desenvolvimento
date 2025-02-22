@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerenciador de Perfis</title>
+  <style>
+    /* Estilo geral */
+    body {
+      background-color: #121212;
+      color: #e0e0e0;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #bb86fc;
+      margin-bottom: 20px;
+    }
+
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    #searchInput {
+      padding: 10px;
+      width: 60%;
+      border: 1px solid #333;
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+    }
+
+    button {
+      padding: 10px 15px;
+      background-color: #bb86fc;
+      border: none;
+      color: #121212;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #9c27b0;
+    }
+
+    .profiles-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .profile-card {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      position: relative;
+    }
+
+    .profile-card img {
+      max-width: 100px;
+      height: auto;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      object-fit: cover;
+    }
+
+    .profile-card p {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 100%;
+    }
+
+    .profile-card .see-more {
+      display: none;
+      cursor: pointer;
+      color: #bb86fc;
+      margin-top: 5px;
+    }
+
+    .profile-card .full-description {
+      display: none;
+      max-height: 100px;
+      overflow-y: auto;
+      margin-top: 5px;
+    }
+
+    .profile-card .actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .edit-form {
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .edit-form input,
+    .edit-form textarea {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      padding: 5px;
+      height: 100px;
+      width: 100%;
+    }
+
+    .edit-form button {
+      padding: 5px 10px;
+      background-color: #bb86fc;
+      border: none;
+      color: #121212;
+      cursor: pointer;
+    }
+
+    .edit-form button:hover {
+      background-color: #9c27b0;
+    }
+
+    /* Formulário de criação de perfil */
+    .create-profile-modal {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #1e1e1e;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      width: 300px;
+    }
+
+    .create-profile-modal input,
+    .create-profile-modal textarea {
+      background-color: #1e1e1e;
+      color: #e0e0e0;
+      border: 1px solid #333;
+      padding: 5px;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .create-profile-modal button {
+      padding: 5px 10px;
+      background-color: #bb86fc;
+      border: none;
+      color: #121212;
+      cursor: pointer;
+    }
+
+    .create-profile-modal button:hover {
+      background-color: #9c27b0;
+    }
+
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls">
+      <input type="text" id="searchInput" placeholder="Pesquisar perfis..." />
+      <button id="createProfileBtn">Criar Perfil</button>
+      <button id="exportDataBtn">Exportar Dados</button>
+      <button id="importDataBtn">Importar Dados</button>
+    </div>
+    <div id="profilesContainer" class="profiles-container"></div>
+  </div>
+
+  <!-- Modal de criação de perfil -->
+  <div class="overlay" id="overlay"></div>
+  <div class="create-profile-modal" id="createProfileModal">
+    <h2>Criar Perfil</h2>
+    <input type="text" id="newName" placeholder="Nome" required />
+    <input type="text" id="newPhoto" placeholder="URL da Foto (opcional)" />
+    <textarea id="newDescription" placeholder="Descrição" required></textarea>
+    <button onclick="saveNewProfile()">Salvar</button>
+    <button onclick="closeModal()">Cancelar</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const profilesContainer = document.getElementById("profilesContainer");
+      const searchInput = document.getElementById("searchInput");
+      const createProfileBtn = document.getElementById("createProfileBtn");
+      const exportDataBtn = document.getElementById("exportDataBtn");
+      const importDataBtn = document.getElementById("importDataBtn");
+      const createProfileModal = document.getElementById("createProfileModal");
+      const overlay = document.getElementById("overlay");
+
+      let profiles = JSON.parse(localStorage.getItem("profiles")) || [];
+
+      // Salvar no localStorage
+      function saveProfiles() {
+        localStorage.setItem("profiles", JSON.stringify(profiles));
+        renderProfiles();
+      }
+
+      // Renderizar perfis
+      function renderProfiles(filter = "") {
+        profilesContainer.innerHTML = "";
+        const filteredProfiles = profiles.filter((profile) =>
+          profile.name.toLowerCase().includes(filter.toLowerCase())
+        );
+
+        filteredProfiles.forEach((profile, index) => {
+          const profileCard = document.createElement("div");
+          profileCard.className = "profile-card";
+
+          const description = profile.description || "Sem descrição.";
+          const isLongDescription = description.length > 70;
+
+          profileCard.innerHTML = `
+            <img src="${profile.photo || ''}" alt="${profile.name}" onerror="this.src=''; this.alt='Sem foto'" />
+            <strong>${profile.name}</strong>
+            <p class="short-description">${isLongDescription ? description.slice(0, 70) + "..." : description}</p>
+            ${isLongDescription ? `<span class="see-more" onclick="toggleFullDescription(this)">Ver mais</span>` : ""}
+            <div class="full-description">${description}</div>
+            <div class="actions">
+              <button onclick="openEditForm(${index})">Editar</button>
+              <button onclick="deleteProfile(${index})">Excluir</button>
+            </div>
+            <div class="edit-form">
+              <input type="text" placeholder="Nome" value="${profile.name}" />
+              <input type="text" placeholder="URL da Foto (opcional)" value="${profile.photo || ''}" />
+              <textarea placeholder="Descrição">${profile.description}</textarea>
+              <button onclick="saveEdit(${index}, this)">Salvar</button>
+            </div>
+          `;
+
+          profilesContainer.appendChild(profileCard);
+        });
+      }
+
+      // Alternar descrição completa
+      window.toggleFullDescription = (element) => {
+        const shortDescription = element.previousElementSibling;
+        const fullDescription = element.nextElementSibling;
+
+        if (fullDescription.style.display === "block") {
+          fullDescription.style.display = "none";
+          shortDescription.style.display = "block";
+          element.textContent = "Ver mais";
+        } else {
+          fullDescription.style.display = "block";
+          shortDescription.style.display = "none";
+          element.textContent = "Ver menos";
+        }
+      };
+
+      // Abrir formulário de edição
+      window.openEditForm = (index) => {
+        const editForm = profilesContainer.children[index].querySelector(".edit-form");
+        editForm.style.display = "flex";
+      };
+
+      // Salvar edição
+      window.saveEdit = (index, button) => {
+        const editForm = button.parentElement;
+        const name = editForm.querySelector("input[placeholder='Nome']").value;
+        const photo = editForm.querySelector("input[placeholder='URL da Foto (opcional)']").value;
+        const description = editForm.querySelector("textarea").value;
+
+        if (name && description) {
+          profiles[index] = { name, photo, description };
+          saveProfiles();
+          editForm.style.display = "none";
+        } else {
+          alert("Preencha os campos obrigatórios (nome e descrição).");
+        }
+      };
+
+      // Excluir perfil
+      window.deleteProfile = (index) => {
+        if (confirm("Tem certeza que deseja excluir este perfil?")) {
+          profiles.splice(index, 1);
+          saveProfiles();
+        }
+      };
+
+      // Pesquisar perfis
+      searchInput.addEventListener("input", (e) => {
+        renderProfiles(e.target.value);
+      });
+
+      // Criar novo perfil
+      createProfileBtn.addEventListener("click", () => {
+        createProfileModal.style.display = "block";
+        overlay.style.display = "block";
+      });
+
+      // Salvar novo perfil
+      window.saveNewProfile = () => {
+        const name = document.getElementById("newName").value;
+        const photo = document.getElementById("newPhoto").value;
+        const description = document.getElementById("newDescription").value;
+
+        if (name && description) {
+          profiles.push({ name, photo, description });
+          saveProfiles();
+          closeModal();
+        } else {
+          alert("Preencha os campos obrigatórios (nome e descrição).");
+        }
+      };
+
+      // Fechar modal
+      window.closeModal = () => {
+        createProfileModal.style.display = "none";
+        overlay.style.display = "none";
+        document.getElementById("newName").value = "";
+        document.getElementById("newPhoto").value = "";
+        document.getElementById("newDescription").value = "";
+      };
+
+      // Exportar dados
+      exportDataBtn.addEventListener("click", () => {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(profiles));
+        const downloadAnchor = document.createElement("a");
+        downloadAnchor.setAttribute("href", dataStr);
+        downloadAnchor.setAttribute("download", "profiles.json");
+        document.body.appendChild(downloadAnchor);
+        downloadAnchor.click();
+        downloadAnchor.remove();
+      });
+
+      // Importar dados
+      importDataBtn.addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = (event) => {
+          const file = event.target.files[0];
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            try {
+              const importedProfiles = JSON.parse(e.target.result);
+              profiles = importedProfiles;
+              saveProfiles();
+            } catch (error) {
+              alert("Erro ao importar os dados.");
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+
+      // Renderizar perfis ao carregar
+      renderProfiles();
+    });
+  </script>
+</body>
+</html>
