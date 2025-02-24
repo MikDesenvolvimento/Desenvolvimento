@@ -1,0 +1,253 @@
+// ==UserScript==
+// @name         ADP - Assistende de Desenvolvimento Pessoal
+// @namespace    http://tampermonkey.net/
+// @version      2025-02-06
+// @description  Um assistend
+// @author       You
+// @match        https://*/*
+// @icon         none
+// @grant        none
+// ==/UserScript==
+
+(function () {
+    'use strict';
+    function verificarHref(palavras, acao, textoBotao, urlRedirecionamento, urlFetch, alerta, textoParaCopiar) {
+        const href = window.location.href;
+        let encontrou = false;
+        palavras.forEach(palavra => {
+            if (href.includes(palavra)) {
+                encontrou = true;
+            }
+        });
+        if (!encontrou) return;
+        if (alerta) {
+            alert(alerta);
+        }
+        if (textoParaCopiar) {
+            navigator.clipboard.writeText(textoParaCopiar).then(() => {
+                console.log("Texto copiado para a área de transferência:", textoParaCopiar);
+            }).catch(err => {
+                console.error("Erro ao copiar texto:", err);
+            });
+        }
+        if (acao === "criarBotao") {
+            const botao = document.createElement("button");
+            botao.textContent = textoBotao;
+            botao.style.position = "fixed";
+            botao.style.top = "20px";
+            botao.style.right = "20px";
+            botao.style.padding = "8px 16px";
+            botao.style.fontSize = "14px";
+            botao.style.fontWeight = "bold";
+            botao.style.backgroundColor = "#007bff";
+            botao.style.color = "#fff";
+            botao.style.border = "none";
+            botao.style.borderRadius = "20px";
+            botao.style.boxShadow = "0 4px 6px rgba(0, 0, 0, 0.1)";
+            botao.style.cursor = "pointer";
+            botao.style.zIndex = "1000";
+            botao.style.transition = "all 0.3s ease";
+            botao.onmouseover = () => {
+                botao.style.backgroundColor = "#0056b3";
+                botao.style.transform = "scale(1.05)";
+            };
+            botao.onmouseout = () => {
+                botao.style.backgroundColor = "#007bff";
+                botao.style.transform = "scale(1)";
+            };
+            if (urlRedirecionamento) {
+                botao.onclick = () => window.location.href = urlRedirecionamento;
+            } else if (urlFetch) {
+                botao.onclick = async () => {
+                    try {
+                        const response = await fetch(urlFetch);
+                        if (!response.ok) throw new Error("Erro ao buscar o conteúdo.");
+                        const novoConteudo = await response.text();
+                        document.open();
+                        document.write(novoConteudo);
+                        document.close();
+                    } catch (erro) {
+                        console.error("Erro no fetch:", erro);
+                    }
+                };
+            }
+            document.body.appendChild(botao);
+        } else {
+            // Executa redirecionamento ou fetch automaticamente
+            if (urlRedirecionamento) {
+                window.location.href = urlRedirecionamento;
+            } else if (urlFetch) {
+                (async () => {
+                    try {
+                        const response = await fetch(urlFetch);
+                        if (!response.ok) throw new Error("Erro ao buscar o conteúdo.");
+                        const novoConteudo = await response.text();
+                        document.open();
+                        document.write(novoConteudo);
+                        document.close();
+                    } catch (erro) {
+                        console.error("Erro no fetch:", erro);
+                    }
+                })();
+            }
+        }
+    }
+
+    verificarHref(
+        ["fazerredacao"],
+        "criarBotao",
+        "Redação Pronta",
+        "https://mikdesenvolvimento.github.io/Desenvolvimento/Notas%20Reda%C3%A7%C3%B5es/?=salvarnota",
+        null,
+        "Faça a redação",
+        null
+    );
+
+    verificarHref(
+        ["salvarnota"],
+        "criarBotao",
+        "Próximo",
+        "https://mikdesenvolvimento.github.io/Desenvolvimento/Classifica%C3%A7%C3%A3o%20de%20Palavras/?=classificar",
+        null,
+        "Salve a sua nota",
+        null
+    );
+
+    verificarHref(
+        ["classificar"],
+        "criarBotao",
+        "Próximo",
+        "https://mikdesenvolvimento.github.io/Desenvolvimento/C%C3%A1lculo%20Mental/?=calcular",
+        null,
+        "Classifique as palavras pela classe gramatical",
+        null
+    );
+
+    verificarHref(
+        ["calcular"],
+        "criarBotao",
+        "Próximo",
+        "https://humanbenchmark.com/?=human_bench",
+        null,
+        "Calcule corretamente",
+        null
+    );
+
+    verificarHref(
+        ["human_bench"],
+        "criarBotao",
+        "Próximo",
+        "https://www.chess.com/play/online?=xadrez",
+        null,
+        "Resolva os exercícios de human benchmark",
+        null
+    );
+
+    verificarHref(
+        ["xadrez"],
+        "criarBotao",
+        "Próximo",
+        "https://example.com/?=leitura",
+        null,
+        "Ganhe um checkmate",
+        null
+    );
+
+    verificarHref(
+        ["leitura"],
+        "criarBotao",
+        "Próximo",
+        "https://mikdesenvolvimento.github.io/Desenvolvimento/48%20Leis/",
+        null,
+        "Leia 15 páginas do livro atual",
+        null
+    );
+
+    verificarHref(
+        ["48leis"],
+        "criarBotao",
+        "Próximo",
+        "https://example.com/?=handgrip",
+        null,
+        "Responda 12 leis do poder",
+        null
+    );
+
+    verificarHref(
+        ["handgrip"],
+        "criarBotao",
+        "Próximo",
+        "https://example.com/?=1tarefa",
+        null,
+        "Treine handgrip",
+        null
+    );
+
+    verificarHref(
+        ["1tarefa"],
+        "criarBotao",
+        "Próximo",
+        null,
+        null,
+        "Faça 1 tarefa",
+        null
+    );
+
+})();
+
+(function () {
+    'use strict';
+
+    // Verifica se o href atual CONTÉM "example.com"
+    if (window.location.href.includes('https://humanbenchmark.com')) {
+        // Função para criar o painel expansível
+        const panel = document.createElement('div');
+        panel.style.position = 'fixed';
+        panel.style.top = '50%';
+        panel.style.right = '-300px';
+        panel.style.width = '300px';
+        panel.style.height = 'auto';
+        panel.style.maxHeight = '80%';
+        panel.style.backgroundColor = '#333';
+        panel.style.zIndex = '9999';
+        panel.style.transition = 'right 0.3s ease-in-out';
+        panel.style.transform = 'translateY(-50%)';
+        panel.style.overflowY = 'auto';
+        panel.style.padding = '20px';
+        panel.style.boxSizing = 'border-box';
+        panel.style.color = '#fff';
+        panel.style.borderRadius = '10px 0 0 10px';
+
+        const content = document.createElement('div');
+        content.textContent = 'Visual memory: 15 Verbal memory: 60 Sequence memory: 10 Number memory: 10 Chimp test: 10';
+        content.style.fontSize = '16px';
+        panel.appendChild(content);
+
+        const arrow = document.createElement('div');
+        arrow.innerHTML = '&#8592;';
+        arrow.style.position = 'fixed';
+        arrow.style.top = '50%';
+        arrow.style.right = '10px';
+        arrow.style.transform = 'translateY(-50%)';
+        arrow.style.color = '#fff';
+        arrow.style.fontSize = '24px';
+        arrow.style.cursor = 'pointer';
+        arrow.style.transition = 'right 0.3s ease-in-out, text-shadow 0.3s ease-in-out';
+        arrow.style.textShadow = '0 0 5px #fff, 0 0 10px #fff, 0 0 20px #0ff, 0 0 40px #0ff, 0 0 80px #0ff';
+
+        let expanded = false;
+        arrow.onclick = () => {
+            if (expanded) {
+                panel.style.right = '-300px';
+                arrow.style.right = '10px';
+            } else {
+                panel.style.right = '0';
+                arrow.style.right = '310px';
+            }
+            expanded = !expanded;
+        };
+
+        document.body.appendChild(panel);
+        document.body.appendChild(arrow);
+    }
+})();
